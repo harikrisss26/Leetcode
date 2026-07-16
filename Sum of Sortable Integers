@@ -1,0 +1,48 @@
+#include <stdbool.h>
+#include <limits.h>
+
+int sortableIntegers(int* nums, int n) {
+    int ans = 0;
+
+    for (int k = 1; k <= n; k++) {
+        if (n % k != 0) continue;
+
+        bool ok = true;
+        int last_max = INT_MIN;
+
+        for (int i = 0; i < n; i += k) {
+            int drops = 0;
+            int mn = nums[i];
+            int mx = nums[i];
+
+            for (int j = 0; j < k - 1; j++) {
+                int curr = nums[i + j];
+                int next = nums[i + j + 1];
+
+                if (curr > next) {
+                    drops++;
+                }
+                if (next < mn) mn = next;
+                if (next > mx) mx = next;
+            }
+
+            if (mn < last_max) {
+                ok = false;
+                break;
+            }
+
+            if (drops > 1 || (drops == 1 && nums[i + k - 1] > nums[i])) {
+                ok = false;
+                break;
+            }
+
+            last_max = mx;
+        }
+
+        if (ok) {
+            ans += k;
+        }
+    }
+
+    return ans;
+}
