@@ -1,0 +1,91 @@
+import java.util.*;
+
+class Solution {
+    class Poly {
+        Map<String, Integer> terms = new HashMap<>();
+        Poly() {}
+        Poly(int val) { terms.put("", val); }
+        Poly(String var, int val) { terms.put(var, val); }
+
+        Poly add(Poly o) { return combine(o, 1); }
+        Poly sub(Poly o) { return combine(o, -1); }
+
+        private Poly combine(Poly o, int sign) {
+            Poly res = new Poly();
+            res.terms.putAll(this.terms);
+            for (String k : o.terms.keySet()) 
+                res.terms.put(k, res.terms.getOrDefault(k, 0) + o.terms.get(k) * sign);
+            return res;
+        }
+
+        Poly mul(Poly o) {
+            Poly res = new Poly();
+            for (String k1 : this.terms.keySet()) {
+                for (String k2 : o.terms.keySet()) {
+                    List<String> vars = new ArrayList<>();
+                    if (!k1.isEmpty()) vars.addAll(Arrays.asList(k1.split("\\*")));
+                    if (!k2.isEmpty()) vars.addAll(Arrays.asList(k2.split("\\*")));
+                    Collections.sort(vars);
+                    String key = String.join("*", vars);
+                    res.terms.put(key, res.terms.getOrDefault(key, 0) + this.terms.get(k1) * o.terms.get(k2));
+                }
+            }
+            return res;
+        }
+
+        List<String> toList() {
+            List<String> keys = new ArrayList<>(), res = new ArrayList<>();
+            for (String k : terms.keySet()) if (!k.isEmpty() && terms.get(k) != 0) keys.add(k);
+            keys.sort((a, b) -> {
+                int d1 = a.split("\\*").length, d2 = b.split("\\*").length;
+                return d1 != d2 ? d2 - d1 : a.compareTo(b);
+            });
+            for (String k : keys) res.add(terms.get(k) + "*" + k);
+            if (terms.getOrDefault("", 0) != 0) res.add(String.valueOf(terms.get("")));
+            return res;
+        }
+    }
+
+    public List<String> basicCalculatorIV(String expression, String[] evalvars, int[] evalints) {
+        Map<String, Integer> ev = new HashMap<>();
+        for (int i = 0; i < evalvars.length; i++) ev.put(evalvars[i], evalints[i]);
+
+        List<Object> tokens = new ArrayList<>();
+        for (String t : expression.replace("(", " ( ").replace(")", " ) ").split("\\s+")) {
+            if (t.isEmpty()) continue;
+            if ("()+-*".contains(t)) tokens.add(t);
+            else if (Character.isDigit(t.charAt(0))) tokens.add(new Poly(Integer.parseInt(t)));
+            else tokens.add(ev.containsKey(t) ? new Poly(ev.get(t)) : new Poly(t, 1));
+        }
+
+        List<Object> rpn = new ArrayList<>();
+        Stack<String> ops = new Stack<>();
+        for (Object tok : tokens) {
+            if (tok instanceof Poly) rpn.add(tok);
+            else {
+                String op = (String) tok;
+                if (op.equals("(")) ops.push(op);
+                else if (op.equals(")")) {
+                    while (!ops.peek().equals("(")) rpn.add(ops.pop());
+                    ops.pop();
+                } else {
+                    while (!ops.isEmpty() && prec(ops.peek()) >= prec(op)) rpn.add(ops.pop());
+                    ops.push(op);
+                }
+            }
+        }
+        while (!ops.isEmpty()) rpn.add(ops.pop());
+
+        Stack<Poly> st = new Stack<>();
+        for (Object tok : rpn) {
+            if (tok instanceof Poly) st.push((Poly) tok);
+            else {
+                Poly b = st.pop(), a = st.pop();
+                st.push(tok.equals("+") ? a.add(b) : tok.equals("-") ? a.sub(b) : a.mul(b));
+            }
+        }
+        return st.pop().toList();
+    }
+
+    private int prec(String op) { return op.equals("*") ? 2 : (op.equals("+") || op.equals("-") ? 1 : 0); }
+}
