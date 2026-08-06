@@ -1,0 +1,33 @@
+import java.util.ArrayList;
+import java.util.List;
+
+class Solution {
+    public int uniqueLetterString(String s) {
+        List<Integer>[] indexMap = new ArrayList[26];
+        for (int i = 0; i < 26; i++) {
+            indexMap[i] = new ArrayList<>();
+            indexMap[i].add(-1);
+        }
+        
+        for (int i = 0; i < s.length(); i++) {
+            indexMap[s.charAt(i) - 'A'].add(i);
+        }
+        
+        int totalSum = 0;
+        
+        for (int i = 0; i < 26; i++) {
+            List<Integer> indices = indexMap[i];
+            indices.add(s.length());
+            
+            for (int j = 1; j < indices.size() - 1; j++) {
+                int prev = indices.get(j - 1);
+                int curr = indices.get(j);
+                int next = indices.get(j + 1);
+                
+                totalSum += (curr - prev) * (next - curr);
+            }
+        }
+        
+        return totalSum;
+    }
+}
