@@ -1,0 +1,41 @@
+class Solution {
+    public int countBinaryPalindromes(long n) {
+        if (n == 0) {
+            return 1;
+        }
+        
+        long temp = n;
+        int len = 0;
+        while (temp > 0) {
+            temp >>= 1;
+            len++;
+        }
+        
+        int count = 1; 
+        for (int i = 1; i < len; i++) {
+            count += 1 << ((i - 1) / 2);
+        }
+        
+        int halfLen = (len + 1) / 2;
+        long firstHalf = n >> (len / 2);
+        long start = 1L << (halfLen - 1);
+        
+        count += (int) (firstHalf - start);
+        
+        long palindrome = firstHalf;
+        int rem = len / 2;
+        if (len % 2 != 0) {
+            firstHalf >>= 1;
+        }
+        for (int i = 0; i < rem; i++) {
+            palindrome = (palindrome << 1) | (firstHalf & 1);
+            firstHalf >>= 1;
+        }
+        
+        if (palindrome <= n) {
+            count++;
+        }
+        
+        return count;
+    }
+}
