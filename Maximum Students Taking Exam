@@ -1,0 +1,54 @@
+import java.util.Arrays;
+
+class Solution {
+    public int maxStudents(char[][] seats) {
+        int m = seats.length;
+        int n = seats[0].length;
+        
+        int[] broken = new int[m];
+        for (int i = 0; i < m; i++) {
+            int mask = 0;
+            for (int j = 0; j < n; j++) {
+                if (seats[i][j] == '#') {
+                    mask |= (1 << j);
+                }
+            }
+            broken[i] = mask;
+        }
+        
+        int[][] dp = new int[m + 1][1 << n];
+        for (int[] row : dp) {
+            Arrays.fill(row, -1);
+        }
+        dp[0][0] = 0;
+        
+        for (int i = 1; i <= m; i++) {
+            for (int mask = 0; mask < (1 << n); mask++) {
+                if ((mask & broken[i - 1]) != 0 || (mask & (mask << 1)) != 0) {
+                    continue;
+                }
+                
+                int students = Integer.bitCount(mask);
+                
+                for (int prevMask = 0; prevMask < (1 << n); prevMask++) {
+                    if (dp[i - 1][prevMask] == -1) {
+                        continue;
+                    }
+                    
+                    if ((mask & (prevMask << 1)) != 0 || (mask & (prevMask >> 1)) != 0) {
+                        continue;
+                    }
+                    
+                    dp[i][mask] = Math.max(dp[i][mask], dp[i - 1][prevMask] + students);
+                }
+            }
+        }
+        
+        int ans = 0;
+        for (int mask = 0; mask < (1 << n); mask++) {
+            ans = Math.max(ans, dp[m][mask]);
+        }
+        
+        return ans;
+    }
+}
